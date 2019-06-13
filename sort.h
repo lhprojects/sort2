@@ -193,7 +193,7 @@ namespace sort {
 			_Top < _Hole && _SORT_LT_PRED(_Pred, *(_First + _Idx), _Val);
 			_Idx = (_Hole - 1) / 2)
 		{	// move _Hole up to parent
-			*(_First + _Hole) = _SORT_STD move(*(_First + _Idx));
+			iter_move(_First + _Hole, _First + _Idx);
 			_Hole = _Idx;
 		}
 
@@ -220,13 +220,13 @@ namespace sort {
 			_Idx = 2 * _Idx + 2;
 			if (_SORT_LT_PRED(_Pred, *(_First + _Idx), *(_First + (_Idx - 1))))
 				--_Idx;
-			*(_First + _Hole) = _SORT_STD move(*(_First + _Idx));
+			iter_move(_First + _Hole, _First + _Idx);
 			_Hole = _Idx;
 		}
 
 		if (_Idx == _Max_sequence_non_leaf && _Bottom % 2 == 0)
 		{	// only child at bottom, move _Hole down to it
-			*(_First + _Hole) = _SORT_STD move(*(_First + (_Bottom - 1)));
+			iter_move(_First + _Hole, _First + (_Bottom - 1));
 			_Hole = _Bottom - 1;
 		}
 
@@ -241,7 +241,7 @@ namespace sort {
 	{	// pop *_First to *_Dest and reheap, using _Pred
 		// precondition: _First != _Last
 		// precondition: _First != _Dest
-		*_Dest = _SORT_STD move(*_First);
+		iter_move(_Dest, _First);
 		_SORT_ _Pop_heap_hole_by_index(_First, std::iterator_traits<_RanIt>::difference_type(0), std::iterator_traits<_RanIt>::difference_type(_Last - _First),
 			_SORT_STD move(_Val), _Pred);
 	}
@@ -281,7 +281,7 @@ namespace sort {
 			_BidIt2 _Dest, _General_ptr_iterator_tag)
 	{	// move [_First, _Last) backwards to [..., _Dest), no special optimization
 		while (_First != _Last)
-			*--_Dest = _SORT_STD move(*--_Last);
+			iter_move(--_Dest, --_Last);
 		return (_Dest);
 	}
 
@@ -315,7 +315,7 @@ namespace sort {
 					for (_BidIt _First1 = _Next1;
 						_SORT_LT_PRED(_Pred, _Val, *--_First1);
 						_Next1 = _First1)
-						*_Next1 = _SORT_STD move(*_First1);	// move hole down
+						iter_move(_Next1, _First1); 	// move hole down
 					*_Next1 = _SORT_STD move(_Val);	// insert element in hole
 				}
 			}
