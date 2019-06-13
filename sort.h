@@ -376,3 +376,192 @@ namespace sort {
 	}
 }
 
+
+
+
+
+namespace sort {
+	template<class _Ty1, class _Ty2>
+	struct ValueDelegate2;
+
+	template<class _Ty1, class _Ty2>
+	struct Value2 {
+
+		template<class _It1, class _It2>
+		Value2(ValueDelegate2<_It1, _It2> &&r);
+
+		template<class _It1, class _It2>
+		Value2 &operator=(ValueDelegate2<_It1, _It2> &&r);
+		
+		_Ty1 first;
+		_Ty2 second;
+	};
+
+
+	template<class _It1, class _It2>
+	struct ValueDelegate2 {
+		ValueDelegate2(_It1 it1, _It2 it2) : _it1(it1), _it2(it2) {
+		}
+
+		template<class _Ty1, class _Ty2>
+		ValueDelegate2 &operator=(Value2<_Ty1, _Ty2> &&v) {
+			*_it1 = std::move(v.first);
+			*_it2 = std::move(v.second);
+			return *this;
+		}
+
+		_It1 _it1;
+		_It2 _it2;
+	};
+
+	template<class _Ty1, class _Ty2>
+	template<class _It1, class _It2>
+	Value2<_Ty1, _Ty2> &Value2<_Ty1, _Ty2>::operator=(ValueDelegate2<_It1, _It2> &&r) {
+		first = std::move(*r._it1);
+		second = std::move(*r._it2);
+	}
+
+	template<class _Ty1, class _Ty2>
+	template<class _It1, class _It2>
+	Value2<_Ty1, _Ty2>::Value2(ValueDelegate2<_It1, _It2> &&r) : first(std::move(*r._it1)), second(std::move(*r._it2)) {
+	}
+
+	template<class _Pred>
+	struct ValueDelegateCompare {
+		ValueDelegateCompare(_Pred &pred) : _pred(pred) {
+		}
+
+		template<class _It1, class _It2>
+		bool operator()(ValueDelegate2<_It1, _It2> &l, ValueDelegate2<_It1, _It2> &r) const {
+			return _pred(*l._it1, *r._it1);
+		}
+
+		template<class _Ty1, class _Ty2, class _It1, class _It2>
+		bool operator()(Value2<_Ty1, _Ty2> &l, ValueDelegate2<_It1, _It2> &r) const {
+			return _pred(l.first, *r._it1);
+		}
+
+		template<class _It1, class _It2, class _Ty1, class _Ty2>
+		bool operator()(ValueDelegate2<_It1, _It2> &l, Value2<_Ty1, _Ty2> &r) const {
+			return _pred(*l._it1, r.first);
+		}
+
+		template<class _Ty1, class _Ty2>
+		bool operator()(Value2<_Ty1, _Ty2> &l, Value2<_Ty1, _Ty2> &r) const {
+			return _pred(l.first, r.first);
+		}
+		_Pred &_pred;
+	};
+
+	template<class _RanIt, class _RanIt1>
+	struct BindIter {
+		typedef Value2<typename std::iterator_traits<_RanIt>::value_type,
+			typename std::iterator_traits<_RanIt1>::value_type> value_type;
+
+		typedef typename std::iterator_traits<_RanIt>::difference_type difference_type;
+		typedef typename std::iterator_traits<_RanIt1>::difference_type difference_type1;
+
+		typedef ValueDelegate2<_RanIt,
+			_RanIt1> delegate_type;
+
+		BindIter(_RanIt it, _RanIt1 it1) : _First(it), _First1(it1) {
+		}
+
+		_RanIt _First;
+		_RanIt1 _First1;
+
+		BindIter &operator--() {
+			--_First;
+			--_First1;
+			return *this;
+		}
+
+		bool operator==(BindIter const &r) {
+			return _First == r._First;
+		}
+
+		bool operator!=(BindIter const &r) {
+			return _First != r._First;
+		}
+
+		bool operator<(BindIter const &r) {
+			return _First < r._First;
+		}
+
+		BindIter &operator++() {
+			++_First;
+			++_First1;
+			return *this;
+		}
+
+		BindIter operator++(int) {
+			BindIter iter = *this;
+			++_First;
+			++_First1;
+			return iter;
+		}
+
+		BindIter operator-(difference_type d) {
+			return BindIter(_First - d, _First1 - difference_type1(d));
+		}
+
+		BindIter operator+(difference_type d) {
+			return BindIter(_First + d, _First1 + difference_type1(d));
+		}
+
+		difference_type operator-(BindIter r) {
+			return _First - r._First;
+		}
+
+		delegate_type operator*() {
+			return delegate_type(_First, _First1);
+		}
+	};
+
+}
+
+namespace std {
+
+	template<class I1, class I2>
+	struct iterator_traits<sort::BindIter<I1, I2> > {
+		typedef typename sort::BindIter<I1, I2>::difference_type difference_type;
+		typedef typename sort::BindIter<I1, I2>::value_type value_type;
+	};
+
+}
+namespace sort {
+
+	template<class _FwdIt1,
+		class _FwdIt2> inline
+		void iter_swap(BindIter<_FwdIt1, _FwdIt2> _Left, BindIter<_FwdIt1, _FwdIt2> _Right)
+	{	// swap *_Left and *_Right
+		std::swap(*_Left._First, *_Right._First);
+		std::swap(*_Left._First1, *_Right._First1);
+	}
+
+	template<class _FwdIt1,
+		class _FwdIt2> inline
+		void iter_move(BindIter<_FwdIt1, _FwdIt2> _Left, BindIter<_FwdIt1, _FwdIt2> _Right)
+	{	// swap *_Left and *_Right
+		*_Left._First = std::move(*_Right._First);
+		*_Left._First1 = std::move(*_Right._First1);
+	}
+
+
+	template<class _RanIt, class _RanIt1> inline
+		void sort2(_RanIt _First, _RanIt _Last, _RanIt1 _First1)
+	{	// order [_First, _Last), using operator<
+		_SORT_ sort2(_First, _Last, _First1, less<>());
+	}
+
+	template<class _RanIt, class _RanIt1, class _Pr> inline
+		void sort2(_RanIt _First, _RanIt _Last, _RanIt1 _First1, _Pr _Pred)
+	{	// order [_First, _Last), using operator<
+		ValueDelegateCompare<_Pr> comp(_Pred);
+		BindIter<_RanIt, _RanIt1> begin(_First, _First1);
+		BindIter<_RanIt, _RanIt1> end(_Last, _First1 + std::iterator_traits<_RanIt1>::difference_type(_Last - _First));
+		_SORT_ sort(begin, end, comp);
+
+	}
+
+}
