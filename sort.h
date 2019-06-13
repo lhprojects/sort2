@@ -63,14 +63,14 @@ namespace sort {
 	template<class _FwdIt1,
 		class _FwdIt2> inline
 		void iter_copy(_FwdIt1 _Left, _FwdIt2 _Right)
-	{	// swap *_Left and *_Right
+	{	// copy *_Left to *_Right
 		*_Left = *_Right;
 	}
 
 	template<class _FwdIt1,
 		class _FwdIt2> inline
 		void iter_move(_FwdIt1 _Left, _FwdIt2 _Right)
-	{	// swap *_Left and *_Right
+	{	// move *_Left to *_Right
 		*_Left = std::move(*_Right);
 	}
 
