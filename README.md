@@ -11,8 +11,9 @@ sort::sort2(a.begin(), a.end(), b.begin()); // a -> { 1, 2, 3}    b-> { z, y, x}
 ```
 
 # Implementation note
-Quick sort + heap sort
-this implementation implemented after reading the implementation Visual Studio 2017.
+Quick sort + heap sort.
+
+This project is implemented after reading the implementation of Visual Studio 2017.
 So there is copy-right risk!
 This project is motivated by interest.
 
